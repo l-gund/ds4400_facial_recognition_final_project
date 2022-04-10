@@ -23,6 +23,10 @@ TODO STEP 5
 11. model performance comparison - make a chart where rows are each model type (including whether it was trained on balanced or unbalanced dataset), and columns are predictive accuracy for each class? ideally show that unbalanced dataset did a worse job
 
 side resources:
+
+http://i-rep.emu.edu.tr:8080/xmlui/bitstream/handle/11129/4353/mehriarmin.pdf?sequence=1
+- great notes on histogram equalization and methodology with PCA, LDA, LBP, decision trees, random forest
+
 a super accessibly written dissertation with details of feature extraction methods AND classification methods! https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=4453&context=etd Eigenface, Fisherface, and Gaborface methods for gender feature representation are introduced, in addition to Local Binary Pattern (LBP) descriptor. The classifiers that are used include Adaboost classifier and SVM
 LDA is good for when we have limited computational resources (which i guess we do)
 random forest is easy and baller if we can get good features from eigenface, fisherface, or gaborface
