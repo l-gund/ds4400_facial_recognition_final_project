@@ -1,44 +1,30 @@
-# ds4400_facial_recognition_final_project
+# Ethnicity Classification of Faces on Balanced and Unbalanced Datasets
+
+Our project was inspired by AI bias researchers' work investigating differences in performance of facial recognition systems across ethnicity and gender lines (See the Gender Shades paper). From the image capture hardware to the machine learning models themselves, significant bias exists at all stages that results in far lower accuracy rates for members of certain classes, especially darker skinned women. Multiple factors contributed to these issues, with unbalanced training data and camera hardware at the forefront. We chose to investigate the difference between demographic balanced and unbalanced training datasets on the performance of a few hand-engineered, simple gender and ethnicity classification models. We found that the unbiased data resulted in models with poor or no fit on the dataset, while the balanced dataset saw reasonable results for our relatively naive approach to computer vision models.
+
+Dataset / EDA
+The dataset we pulled from was the UTK Face dataset, a diverse and consistent face image dataset with 20,000 entries.  Each entry was cropped and aligned to center a single face in the frame. Additionally, each image came with details of the age, gender, ethnicity, and date in which the photo was taken in the title of each image.  
+
+Our models were trained to predict ethnicity labels, but we also included gender labels to visualize demographic representation in our datasets (see below bar plots). We randomly sampled 2000 images from our dataset, once without conditions and once with conditions.  In the first instance, we did not set any criteria, and in the other we required equal representation of each of the five racial groups in our sample. The unbalanced sample’s distribution is proportional to the original dataset, with overrepresentation of white subjects. The balanced sample has 400 instances of each ethnicity with near-equal gender parity as well (note that the balanced sample has more women than men by a small margin).
+
+Feature Representation
+We applied the following transformations to dataset images for feature extraction. We first grayscaled the images, resulting in a single value for each pixel ranging from 0 to 255. The benefit of grayscaling the images seems unintuitive, but it both allows simpler feature representation and has been shown to find reasonable model performance. We then flattened the grayscale image matrices into 1D vectors of size [40000, 1]. We used a StandardScaler object to apply a fit transform on all vectors in the data, which modified grayscale pixel values to have mean zero and unit variance. We then used PCA to extract 100 components from the [40000, 1] normalized image vectors. This idea is also unintuitive but is equivalent to getting the “eigenfaces” from the dataset. We used these 100 PCA-extracted components as features for training models. Note that both the unbalanced sample and balanced sample datasets were structurally identical with the equivalent transformations applied to each.
+
+Model Selection
+We trained four unique model types, with one cross-validated instance of each model for our unbalanced dataset, and the same for our balanced dataset. The two datasets were structurally identical with equivalent transformations applied to each. Because the classification task involved pattern recognition, we focused on using simple models that are robust to overfitting and have more complex decision boundaries. The first model we tried was multi-class logistic regression, but we had trouble with convergence on the unbalanced dataset and moved to ensemble models. We first trained a random forest classifier with 100 estimators and a max depth of 5. We then tried an Adaboost classifier using 50 “decision stump” estimators. The ensemble models had reasonable performance on the balanced dataset, so we moved to other models used in research papers with similar methodologies to ours. We used a multi-layer perceptron classifier with hidden layers of size 100, reLU activation function, and 10-4 alpha (regularization term). We also used a support vector classifier (SVC) with an rbf kernel and degree of 3. 
+
+Results
+From the confusion matrices above, we can see that our models trained on demographic balanced datasets have significantly better performance than equivalent models trained on a random unbalanced sample.  Machines trained on the unbalanced dataset have decent accuracy on white samples but low accuracy for other ethnicity groups (see the random forest trained on unbalanced data in the first row below). We see that the balanced dataset has higher mean accuracy for all model types, and the accuracy values are more consistent for each class, indicating better demographic parity. This difference sufficiently warrants that demographic balanced samples are extremely important for training face classification models, and this impact likely extends to other face-related computer vision models as well.
+
+We deem per-class accuracy to be the most important metric for measuring model performance on this task, and models trained on the balanced dataset perform better across the board for per-class accuracy. Comparing the models directly, we found that the best models for the task were the support vector classifier and multi-layer perceptron, both trained on the balanced dataset. The balanced data random forest also had reasonable performance, and its accuracy could likely be improved with better hyperparameter tuning. One surprising result was that the MLP trained on the unbalanced dataset was our third most accurate model, with only minor losses in overall accuracy compared to the balanced dataset. It’s important to note that the unbalanced data MLP had higher individual accuracy for better represented classes and lower individual accuracy for underrepresented classes. The balanced dataset model has higher overall accuracy and better demographic parity, so it is more equitable.
+
+The unbalanced dataset on which we observed poorer performance is representative of larger datasets that are typically used to train popular ML models for facial recognition. Our results sufficiently warrant the recommendation that deployed models are trained on balanced dataset to achieve better demographic parity across ethnicity classes. 
 
 
-1. download data - download the massive UTK aligned and cropped labelled faces (will refer to it as UTK-CA) https://susanqq.github.io/UTKFace/
-2. get random subsample for testing - choose a random sample of that massive dataset and load them in. idk maybe 100 images to practice until we make sure shit runs. how do we store a bunch of images? can we put them in a...dataframe?
-3. get target labels for race and gender - extract corresponding labels for images from file names with regexes or something, store race in a vector and gender in a different vector
-5. preprocessing - preprocessing was mostly done for us by the wonderful UTK-CA dataset
+Dataset: UTK cropped and aligned https://susanqq.github.io/UTKFace/ 
 
-ABOVE DONE
-
-SKIP BELOW STEP, DO AT END TO SEE HOW ACCURACY CHANGES
-7. normalizing - we might want to use "histogram equalization" so that light/dark doesn't change predictions, but unsure of best way to do this
-TODO STEP 5
-
-
-EIGENFACES ARE A GOOD IDEA. TRY WORKING WITH THIS FOR TWO DAYS ON RACE, TRY TO VISUALIZE THEM FOR EACH RACE CLASS. gender would be an easier task, it's binary. 
-IF THIS IS TOO HARD, CONSIDER USING PRE-TRAINED MODIFIED CNNs FOR FEATURE EXTRACTION INSTEAD (see tutorials online)
-6. extract features from images - extract features from the face images with one of a few possible techniques (eigenfaces/fisherfaces/LBPH (local binary patterns histogram)) goal: construct a low-dimensional linear subspace that best explains the variation/scatter of the face images
-  4a. choose a method of feature extraction from {eigenface, fisherface, gaborface, LBPH (local binary patterns histogram)}
-  TODO STEP 4A
-  4b. resource - tutorials for using opencv's eigenfaces/fisherfaces/LBPH (local binary patterns histogram) https://www.superdatascience.com/blogs/opencv-face-recognition
-  
-  
-5. model selection - select models that we want to train on the extracted features
-  5a. consider: multi-class logistic regression FIRST, linear SVM, then random forest, adaboost+eigen should be a good combo but kinda overkill. using a FFNN at the end is how CNNs are constructed that so that would work well
-  TODO STEP 5A
-  5b. Consider a pre-trained CNN if we're feeling frisky and want to melt some GPUs?
-6. practice model training - train models on extracted features using our 100 person subset of UTK-CA. see if it works
-7. select unbalanced dataset - Choose a larger random subset of UTK-CA, num records = (TBD TODO - not sure how many is reasonable for this), split train/test, see how it performs. 
-8. create balanced dataset - Choose a random subset of UTK-CA the same size as the above subset BUT make sure it's balanced by explicitly finding 8 groups of equal size (8 = races*genders, ex  num black females should be equal to num white males in balanced dataset), split train/test, see how it performs.
-9. demonstrate balanced vs. unbalanced - make a graph showing the representations of age and race in the balanced and unbalanced datasets
-10. real model training - train models we chose in 5a on unbalanced dataset and on balanced dataset. save as many performance metrics as we can for each model
-11. model performance comparison - make a chart where rows are each model type (including whether it was trained on balanced or unbalanced dataset), and columns are predictive accuracy for each class? ideally show that unbalanced dataset did a worse job
-
-side resources:
-
-http://i-rep.emu.edu.tr:8080/xmlui/bitstream/handle/11129/4353/mehriarmin.pdf?sequence=1
-- great notes on histogram equalization and methodology with PCA, LDA, LBP, decision trees, random forest
-
-a super accessibly written dissertation with details of feature extraction methods AND classification methods! https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=4453&context=etd Eigenface, Fisherface, and Gaborface methods for gender feature representation are introduced, in addition to Local Binary Pattern (LBP) descriptor. The classifiers that are used include Adaboost classifier and SVM
-LDA is good for when we have limited computational resources (which i guess we do)
-random forest is easy and baller if we can get good features from eigenface, fisherface, or gaborface
-MLP is also good, they use 20 hidden nodes and 40 training cycles for binary gender (ha) classification task
-also very useful for discussion and model comparison sections - lots of great info at an appropriate level for us to read in this paper
+Inspirational references: 
+[Gender Shades](http://proceedings.mlr.press/v81/buolamwini18a/buolamwini18a.pdf) paper (inspired the goal of our project, to demonstrate disparities between models trained on demographic balanced vs unbalanced datasets across ethnicity lines)
+[WVU paper](https://researchrepository.wvu.edu/cgi/viewcontent.cgi?article=4453&context=etd) on gender classification from face images (partially inspired our normalization, feature extraction, and model selection)
+[UMKC slides about eigenfaces](https://sce.umkc.edu/faculty-sites/lizhu/teaching/2019.spring.vision/notes/lec14.pdf) for understanding how to extract features directly from pixels 
+[Face classification using random forests and different feature extraction methods](http://i-rep.emu.edu.tr:8080/xmlui/bitstream/handle/11129/4353/mehriarmin.pdf?sequence=1) for considering different feature extraction methods
